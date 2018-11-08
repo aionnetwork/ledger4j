@@ -70,7 +70,7 @@ public class LedgerUtilities {
         return true;
     }
 
-    private static String intToHex(int amount) {
+    public static String intToHex(int amount) {
         // TODO: this can be optimised
         return "0x" + bytesToHex(BigInteger.valueOf(amount).toByteArray());
     }

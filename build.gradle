@@ -8,4 +8,7 @@ dependencies {
     compile group: 'net.java.dev.jna', name: 'jna', version: '4.0.0'
     compile files('deps/purejavahidapi-0.0.2.jar')
     compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+
+    testCompile 'junit:junit:4.12'
+    testCompile "com.google.truth:truth:0.42"
 }
