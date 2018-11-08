@@ -17,7 +17,7 @@ public class LedgerDevice {
     }
 
     public void write(@Nonnull byte[] arg) {
-
+        this.device.setFeatureReport(arg, arg.length);
     }
 
     public byte[] readChannel() {
