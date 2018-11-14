@@ -4,6 +4,8 @@ import purejavahidapi.HidDevice;
 import purejavahidapi.HidDeviceInfo;
 import purejavahidapi.PureJavaHidApi;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
@@ -17,6 +19,7 @@ public class LedgerUtilities {
         }
     }
 
+    @Nonnull
     static String deviceInfo(HidDeviceInfo info) {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
@@ -33,6 +36,7 @@ public class LedgerUtilities {
         return builder.toString();
     }
 
+    @Nonnull
     private static void entry(StringBuilder builder, String entry, String value) {
         builder.append(entry);
         builder.append(" = ");
@@ -40,6 +44,7 @@ public class LedgerUtilities {
         builder.append(", ");
     }
 
+    @Nullable
     public static LedgerDevice findLedgerDevice() throws IOException {
         List<HidDeviceInfo> infos = PureJavaHidApi.enumerateDevices();
 
@@ -70,12 +75,14 @@ public class LedgerUtilities {
         return true;
     }
 
+    @Nonnull
     public static String intToHex(int amount) {
         // TODO: this can be optimised
         return "0x" + bytesToHex(BigInteger.valueOf(amount).toByteArray());
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    @Nonnull
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for ( int j = 0; j < bytes.length; j++ ) {
@@ -84,5 +91,51 @@ public class LedgerUtilities {
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }
         return new String(hexChars);
+    }
+
+    // from: https://stackoverflow.com/questions/2648242/is-this-the-best-way-to-convert-string-hex-to-bytes
+    // with some minor tweaks
+    @Nonnull
+    public static byte[] hexToBytes(@Nonnull String hex) {
+        if (hex.length() % 2 != 0) {
+            throw new IllegalArgumentException("Must pass an even number of characters.");
+        }
+
+        if (hex.substring(0, 2).equals("0x")) {
+            hex = hex.substring(2);
+        }
+
+        return hexToBytes(hex.toCharArray());
+    }
+
+    @Nonnull
+    private static byte[] hexToBytes(@Nonnull char[] hex) {
+        if (hex.length % 2 != 0) {
+            throw new IllegalArgumentException("Must pass an even number of characters.");
+        }
+
+        int length = hex.length >> 1;
+        byte[] raw = new byte[length];
+        for (int o = 0, i = 0; o < length; o++) {
+            raw[o] = (byte) ((getHexCharValue(hex[i++]) << 4)
+                    | getHexCharValue(hex[i++]));
+        }
+        return raw;
+    }
+
+    private static byte getHexCharValue(char c) {
+        if (c >= '0' && c <= '9') {
+            return (byte) (c - '0');
+        }
+
+        if (c >= 'A' && c <= 'F') {
+            return (byte) (10 + c - 'A');
+        }
+
+        if (c >= 'a' && c <= 'f') {
+            return (byte) (10 + c - 'a');
+        }
+
+        throw new IllegalArgumentException("Invalid hex character");
     }
 }

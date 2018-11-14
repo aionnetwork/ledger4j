@@ -4,9 +4,9 @@ import javax.annotation.Nonnull;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
-public class APDUWrapper {
+import static org.aion.ledger.Constants.PACKET_SIZE;
 
-    public static final int PACKET_SIZE = 64;
+public class APDUWrapper {
 
     public static class SerializedPacket {
         public byte[] data;
