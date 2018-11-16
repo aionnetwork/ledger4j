@@ -60,6 +60,9 @@ public class LedgerDevice {
      */
     private void write(@Nonnull final byte[] arg) throws LedgerWriteException {
         // assert arg.length == 64;
+        // TODO: the ledgerblue implementation manually attaches at 0x0 in front
+        // this is for HID api's channel when setting an output report
+        // we already have this feature included by library
         int ret = this.device.setOutputReport((byte) 0x00, arg, arg.length);
 
         if (ret == -1) {
@@ -93,7 +96,7 @@ public class LedgerDevice {
                 bufferLock.unlock();
             }
 
-            if (bufferSize >= 64) {
+            if (bufferSize >= PACKET_SIZE) {
                 break;
             }
 
@@ -166,7 +169,7 @@ public class LedgerDevice {
 
     private static final byte[] HEADER_CMD_PADDING = new byte[] {(byte) 0x00, (byte) 0x00};
     private static final int    HEADER_CMD_PADDING_SIZE = 2;
-    private static final int    HEADER_PAYLOAD_SIZE = 1;
+    private static final int    HEADER_PAYLOAD_SIZE = 2;
 
     // BIP44 specific path
     // 44'/425'/0/0
@@ -192,16 +195,23 @@ public class LedgerDevice {
         return bip44FullPath;
     }
 
-    @Nullable
-    public byte[] getPublicKey(final int offset) {
-        byte[] bip44Path = generateBip32Path(offset);
-        ByteBuffer buf = ByteBuffer.allocate(AION_APP_PREFIX_SIZE + INS_CMD_SIZE + HEADER_CMD_PADDING_SIZE + HEADER_PAYLOAD_SIZE + bip44Path.length);
+    @Nonnull
+    protected static byte[] publicKeyAPDUCommand(@Nonnull final byte[] bip32Path) {
+        ByteBuffer buf = ByteBuffer.allocate(AION_APP_PREFIX_SIZE + INS_CMD_SIZE + HEADER_CMD_PADDING_SIZE + HEADER_PAYLOAD_SIZE + bip32Path.length);
         buf.put((byte) AION_APP_PREFIX);
         buf.put((byte) INS_GET_PUBLIC_KEY);
         buf.put(HEADER_CMD_PADDING);
-        buf.put((byte) bip44Path.length);
-        buf.put(bip44Path);
-        return exchange(buf.array());
+        buf.put((byte) (bip32Path.length + 1));
+        buf.put((byte) (bip32Path.length / 4));
+        buf.put(bip32Path);
+        return buf.array();
+    }
+
+    @Nullable
+    public byte[] getPublicKey(final int offset) {
+        byte[] bip32Path = generateBip32Path(offset);
+        byte[] pkApdu = publicKeyAPDUCommand(bip32Path);
+        return exchange(pkApdu);
     }
 
     @Override
