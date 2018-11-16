@@ -10,7 +10,7 @@ public class Constants {
     public static int           CHANNEL = 0x0101;
 
     // TODO: verify this stat is consistent on Windows and Mac
-    public static String        PRODUCT_LEDGER = "Ledger Nano S";
+    public static String        PRODUCT_LEDGER = "Nano S";
 
     public static final int     PACKET_SIZE = 64;
 

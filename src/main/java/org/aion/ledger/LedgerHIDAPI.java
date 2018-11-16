@@ -5,6 +5,10 @@ import org.hid4java.HidDevice;
 
 import javax.annotation.Nonnull;
 
+import java.io.IOException;
+
+import static org.aion.ledger.Constants.PACKET_SIZE;
+
 public class LedgerHIDAPI extends LedgerDevice {
 
     private final HidDevice device;
@@ -33,7 +37,7 @@ public class LedgerHIDAPI extends LedgerDevice {
      */
     @Override
     protected void write(@Nonnull final byte[] arg) throws LedgerWriteException {
-        // TODO
+        this.device.write(arg, arg.length, (byte) 0x00);
     }
 
     /**
@@ -45,7 +49,13 @@ public class LedgerHIDAPI extends LedgerDevice {
      */
     @Override
     protected byte[] read(final int waitPeriod) {
-        // TODO
-        return null;
+        byte[] data = new byte[PACKET_SIZE];
+        int resp = this.device.read(data);
+
+        if (resp < 0) {
+            // TODO: should distinguish this state
+            return null;
+        }
+        return data;
     }
 }
