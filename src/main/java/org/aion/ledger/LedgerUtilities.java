@@ -1,5 +1,7 @@
 package org.aion.ledger;
 
+import org.hid4java.HidManager;
+import org.hid4java.HidServices;
 import purejavahidapi.HidDevice;
 import purejavahidapi.HidDeviceInfo;
 import purejavahidapi.PureJavaHidApi;
@@ -9,6 +11,8 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
+
+import static org.aion.ledger.Constants.LIB_NATIVE;
 
 public class LedgerUtilities {
 
@@ -45,32 +49,58 @@ public class LedgerUtilities {
     }
 
     @Nullable
-    public static LedgerDevice findLedgerDevice() throws IOException {
+    private static LedgerDevice findLedgerDevicePJHID() throws IOException {
         List<HidDeviceInfo> infos = PureJavaHidApi.enumerateDevices();
-
         // implies that are there is only one ledger attached, what if multiple (?)
         for (HidDeviceInfo info : infos) {
-            if (isLedger(info)) {
-                HidDevice device = null;
-                return new LedgerDevice(PureJavaHidApi.openDevice(info));
+            if (isLedger(info.getVendorId(), info.getProductString())) {
+                return new LedgerPJHID(PureJavaHidApi.openDevice(info));
             }
         }
+
+        // nothing found
         return null;
     }
 
-    private static boolean isLedger(HidDeviceInfo device) {
+    @Nullable
+    private static LedgerDevice findLedgerDeviceHIDAPI() {
+        HidServices services = HidManager.getHidServices();
+        for (org.hid4java.HidDevice device : services.getAttachedHidDevices()) {
+            if (isLedger(device.getVendorId(), device.getProduct())) {
+
+                if (!device.isOpen()) {
+                    device.open();
+                }
+                return new LedgerHIDAPI(device);
+            }
+        }
+
+        // nothing found
+        return null;
+    }
+
+    @Nullable
+    public static LedgerDevice findLedgerDevice() throws IOException {
+        if (LIB_NATIVE) {
+            return findLedgerDeviceHIDAPI();
+        } else {
+            return findLedgerDevicePJHID();
+        }
+    }
+
+    private static boolean isLedger(final int vendorId, @Nonnull final String productString) {
         // TODO: this area needs work, original implement not picking up Nano S
         // TODO: the second condition specified below (for fallback on Mac OS and Windows currently not included)
         // see: https://github.com/LedgerHQ/ledgerjs/blob/master/packages/hw-transport-node-hid/src/getDevices.js
         // written this way more for clarity
-        if (device.getVendorId() != Constants.VENDOR_LEDGER)
+        if (vendorId != Constants.VENDOR_LEDGER)
             return false;
 
         // related discussion
         // https://github.com/signal11/hidapi/issues/385
         // TODO: this is a heuristic derived from me looking at outputs
         // might not be consistent on all platforms
-        if (!device.getProductString().equals(Constants.PRODUCT_LEDGER))
+        if (!productString.equals(Constants.PRODUCT_LEDGER))
             return false;
         return true;
     }

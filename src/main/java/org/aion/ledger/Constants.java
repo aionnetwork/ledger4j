@@ -1,6 +1,7 @@
 package org.aion.ledger;
 
 public class Constants {
+    public static boolean LIB_NATIVE = true;
 
     public static int           VENDOR_LEDGER = 0x2c97;
 

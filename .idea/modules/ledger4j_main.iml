@@ -14,10 +14,13 @@
           <root url="jar://$MODULE_DIR$/../../deps/purejavahidapi-0.0.2.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../../deps/purejavahidapi-0.0.2-sources.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Gradle: net.java.dev.jna:jna:4.0.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.hid4java:hid4java:0.5.0" level="project" />
+    <orderEntry type="library" name="Gradle: net.java.dev.jna:jna:4.2.2" level="project" />
     <orderEntry type="library" name="Gradle: com.google.code.findbugs:jsr305:3.0.2" level="project" />
   </component>
 </module>
