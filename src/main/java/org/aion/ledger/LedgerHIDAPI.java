@@ -12,7 +12,7 @@ public class LedgerHIDAPI extends LedgerDevice {
 
     private final HidDevice device;
 
-    public LedgerHIDAPI(HidDevice device) {
+    public LedgerHIDAPI(@Nonnull final HidDevice device) {
         this.device = device;
     }
 

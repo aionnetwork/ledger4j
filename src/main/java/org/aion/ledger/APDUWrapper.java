@@ -49,9 +49,18 @@ public class APDUWrapper {
                                                    @Nonnull final boolean ble) {
         // assert some invariants
         // TODO: convert to proper runtime exceptions later
-        assert channel > 0;
-        assert channel <= (2 << 16);
-        assert sequenceIdx <= (2 << 16);
+
+        if (channel <= 0) {
+            throw new IllegalArgumentException("channel must be > 0");
+        }
+
+        if (channel > (2 << 16)) {
+            throw new IllegalArgumentException("channel must be <= (2 << 16)");
+        }
+
+        if (sequenceIdx > (2 << 16)) {
+            throw new IllegalArgumentException("sequenceIdx must be <= (2 << 16)");
+        }
 
         // allocate into 64 byte chunks
         final ByteBuffer buf = ByteBuffer.allocate(PACKET_SIZE);

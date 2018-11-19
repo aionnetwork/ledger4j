@@ -54,9 +54,12 @@ public class AionApp {
      * @return byte array representing the full bip44 path (20 bytes)
      */
     @Nonnull
-    protected static byte[] generateBip32Path(final int offset) {
+    static byte[] generateBip32Path(final int offset) {
         final long offsetExpanded = offset & 0x00000000FFFFFFFFL;
-        assert offsetExpanded <= BIP44_MAX_OFFSET;
+
+        if (offsetExpanded > BIP44_MAX_OFFSET) {
+            throw new IllegalArgumentException("offset cannot be greater than BIP44_MAX_OFFSET=" + BIP44_MAX_OFFSET);
+        }
 
         final byte[] bip44FullPath = new byte[20];
         System.arraycopy(BIP44_PATH, 0, bip44FullPath, 0, BIP44_PATH.length);
@@ -66,14 +69,32 @@ public class AionApp {
     }
 
     @Nonnull
-    protected static byte[] publicKeyAPDUCommand(@Nonnull final byte[] bip32Path) {
-        ByteBuffer buf = ByteBuffer.allocate(AION_APP_PREFIX_SIZE + INS_CMD_SIZE + HEADER_CMD_PADDING_SIZE + HEADER_PAYLOAD_SIZE + bip32Path.length);
+    static byte[] publicKeyAPDUCommand(@Nonnull final byte[] bip32Path) {
+        ByteBuffer buf = ByteBuffer.allocate(AION_APP_PREFIX_SIZE +
+                INS_CMD_SIZE + HEADER_CMD_PADDING_SIZE + HEADER_PAYLOAD_SIZE + bip32Path.length);
         buf.put((byte) AION_APP_PREFIX);
         buf.put(INS_GET_PUBLIC_KEY);
         buf.put(HEADER_CMD_PADDING);
         buf.put((byte) (bip32Path.length + 1));
         buf.put((byte) (bip32Path.length / 4));
         buf.put(bip32Path);
+        return buf.array();
+    }
+
+    @Nonnull
+    static byte[] signPayloadAPDUCommand(@Nonnull final byte[] bip32Path, @Nonnull final byte[] payload) {
+        final int payloadLength = bip32Path.length + payload.length;
+        ByteBuffer buf = ByteBuffer.allocate(AION_APP_PREFIX_SIZE +
+                INS_CMD_SIZE + HEADER_CMD_PADDING_SIZE + HEADER_PAYLOAD_SIZE + bip32Path.length + payload.length);
+        buf.put((byte) AION_APP_PREFIX);
+        buf.put(INS_SIGN);
+        buf.put(HEADER_CMD_PADDING);
+
+        // TODO: figure out this mystery
+        buf.put((byte) (payloadLength + 1));
+        buf.put((byte) (bip32Path.length / 4));
+        buf.put(bip32Path);
+        buf.put(payload);
         return buf.array();
     }
 
@@ -107,5 +128,26 @@ public class AionApp {
         System.arraycopy(out, 0, pubKey, 0, 32);
         System.arraycopy(out, 32, address, 0, 32);
         return new KeyAddress(pubKey, address);
+    }
+
+    /**
+     * Given an index offset (indicating which account to sign from in HD Path) and
+     * a payload to sign, returns the signature
+     *
+     * @param offset of the account
+     * @param payload message to be signed
+     * @return 64-byte signature of the payload
+     * @throws CommsException
+     */
+    @Nullable
+    public byte[] signPayload(final int offset, @Nonnull final byte[] payload) throws CommsException {
+
+        if (payload.length > 0xFF) {
+            throw new IllegalArgumentException("payload cannot be greater than 255 (0xFF) bytes");
+        }
+
+        byte[] bip32Path = generateBip32Path(offset);
+        byte[] apduCmd = signPayloadAPDUCommand(bip32Path, payload);
+        return ledgerDevice.exchange(apduCmd);
     }
 }

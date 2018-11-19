@@ -2,43 +2,14 @@ package org.aion.ledger;
 
 import org.hid4java.HidManager;
 import org.hid4java.HidServices;
-import purejavahidapi.HidDevice;
-import purejavahidapi.HidDeviceInfo;
-import purejavahidapi.PureJavaHidApi;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.util.List;
 
 import static org.aion.ledger.Constants.LIB_NATIVE;
 
 public class LedgerUtilities {
-
-    public static void printDevices() {
-        List<HidDeviceInfo> devices = PureJavaHidApi.enumerateDevices();
-        for (HidDeviceInfo info : devices) {
-            System.out.println(deviceInfo(info));
-        }
-    }
-
-    @Nonnull
-    static String deviceInfo(HidDeviceInfo info) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("[");
-        entry(builder, "path", info.getPath());
-        entry(builder, "deviceId", info.getDeviceId());
-        entry(builder, "manufacturingString", info.getManufacturerString());
-        entry(builder, "productString", info.getProductString());
-        entry(builder, "serialNumberString", info.getSerialNumberString());
-        entry(builder, "releaseNumber", intToHex(info.getReleaseNumber()));
-        entry(builder, "productId", intToHex(info.getProductId()));
-        entry(builder, "usagePage", intToHex(info.getUsagePage()));
-        entry(builder, "vendorId", intToHex(info.getVendorId()));
-        builder.append("]");
-        return builder.toString();
-    }
 
     @Nonnull
     private static void entry(StringBuilder builder, String entry, String value) {
