@@ -1,11 +1,14 @@
-package org.aion.ledger;
+package org.aion.ledger.application;
 
+import org.aion.ledger.APDUWrapper;
+import org.aion.ledger.LedgerDevice;
+import org.aion.ledger.LedgerUtilities;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.ledger.LedgerDevice.generateBip32Path;
+import static org.aion.ledger.application.AionApp.generateBip32Path;
 
-public class LedgerDeviceTest {
+public class AionAppTest {
     @Test
     public void testBip32PathDerivation() {
         byte[] expectedPath = LedgerUtilities.hexToBytes("8000002C800001A9800000008000000080000000");
@@ -16,8 +19,8 @@ public class LedgerDeviceTest {
     public void testGenerateCorrectAPDUCommand() {
         // this is address at offset 0
         byte[] expectedPublicKeyAPDU = LedgerUtilities.hexToBytes("e002000015058000002c800001a9800000008000000080000000");
-        byte[] genPath = LedgerDevice.generateBip32Path(0);
-        byte[] genAPDUCmd = LedgerDevice.publicKeyAPDUCommand(genPath);
+        byte[] genPath = AionApp.generateBip32Path(0);
+        byte[] genAPDUCmd = AionApp.publicKeyAPDUCommand(genPath);
 
         assertThat(genAPDUCmd).isEqualTo(expectedPublicKeyAPDU);
     }
@@ -29,8 +32,8 @@ public class LedgerDeviceTest {
 
         // generation
         byte[] expectedPublicKeyAPDU = LedgerUtilities.hexToBytes("e002000015058000002c800001a9800000008000000080000000");
-        byte[] genPath = LedgerDevice.generateBip32Path(0);
-        byte[] genAPDUCmd = LedgerDevice.publicKeyAPDUCommand(genPath);
+        byte[] genPath = AionApp.generateBip32Path(0);
+        byte[] genAPDUCmd = AionApp.publicKeyAPDUCommand(genPath);
         byte[] genWrappedAPDUCmd = APDUWrapper.wrapCommandAPDU(channel, genAPDUCmd, false);
         assertThat(genWrappedAPDUCmd).isEqualTo(expectedWrappedPublicKeyAPDU);
     }

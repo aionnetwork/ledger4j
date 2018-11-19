@@ -108,7 +108,12 @@ public class LedgerUtilities {
     @Nonnull
     public static String intToHex(int amount) {
         // TODO: this can be optimised
-        return "0x" + bytesToHex(BigInteger.valueOf(amount).toByteArray());
+        return "0x" + bytesToHex(toByteArray(amount));
+    }
+
+    @Nonnull
+    public static String shortToHex(short amount) {
+        return "0x" + bytesToHex(toByteArray(amount));
     }
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
@@ -186,7 +191,15 @@ public class LedgerUtilities {
     }
 
     @Nonnull
-    static byte[] toHardenedOffset(final int i) {
+    private static byte[] toByteArray(final short i) {
+        final byte[] val = new byte[2];
+        val[1] = (byte) (i & 0xFF);
+        val[0] = (byte) ((i >> 8) & 0xFF);
+        return val;
+    }
+
+    @Nonnull
+    public static byte[] toHardenedOffset(final int i) {
         byte[] offset = toByteArray(i);
         offset[0] = (byte) (offset[0] | (byte) 0x80);
         return offset;

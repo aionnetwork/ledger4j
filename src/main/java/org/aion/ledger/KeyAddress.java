@@ -6,7 +6,8 @@ public class KeyAddress {
     private final byte[] publicKey;
     private final byte[] address;
 
-    public KeyAddress(@Nonnull final byte[] publicKey, @Nonnull final byte[] address) {
+    public KeyAddress(@Nonnull final byte[] publicKey,
+                      @Nonnull final byte[] address) {
         this.publicKey = publicKey;
         this.address = address;
     }
