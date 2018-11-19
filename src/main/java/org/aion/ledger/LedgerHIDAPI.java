@@ -6,8 +6,6 @@ import org.hid4java.HidDevice;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import java.io.IOException;
-
 import static org.aion.ledger.Constants.PACKET_SIZE;
 
 public class LedgerHIDAPI extends LedgerDevice {
