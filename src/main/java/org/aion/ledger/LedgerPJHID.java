@@ -116,6 +116,11 @@ public class LedgerPJHID extends LedgerDevice {
     }
 
     @Override
+    protected void setNonBlocking(boolean condition) {
+        // do nothing here
+    }
+
+    @Override
     public String toString() {
         return LedgerUtilities.deviceInfo(this.device.getHidDeviceInfo());
     }

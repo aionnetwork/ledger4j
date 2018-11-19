@@ -1,9 +1,12 @@
 package org.aion.ledger;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
+import static org.aion.ledger.ByteUtilities.trimHead;
+import static org.aion.ledger.ByteUtilities.trimTail;
 import static org.aion.ledger.Constants.PACKET_SIZE;
 
 public class APDUWrapper {
@@ -102,10 +105,13 @@ public class APDUWrapper {
             throw new DeserializationException("Cannot deserialize packet, header information missing");
         }
 
-        ByteBuffer buf = ByteBuffer.wrap(buffer);
+        final int offset = sequenceIdx * PACKET_SIZE;
+        // TODO: this can be optimized, offsets anyone?
+        byte[] trimBuf = trimHead(buffer, offset);
+        trimBuf = trimTail(trimBuf, trimBuf.length - PACKET_SIZE);
+        ByteBuffer buf = ByteBuffer.wrap(trimBuf);
         if (!ble) {
             final int dChannel = buf.getShort() & 0x0000FFFF;
-
             if (dChannel != channel) {
                 throw new DeserializationException("Invalid channel");
             }
@@ -128,5 +134,48 @@ public class APDUWrapper {
         final byte[] payload = new byte[buf.remaining()];
         buf.get(payload);
         return new DeserializedPacket(payload, totalResponseLength);
+    }
+
+    @Nullable
+    public static byte[] unwrapResponseAPDU(final int channel,
+                                            @Nonnull byte[] data,
+                                            final boolean ble)
+            throws DeserializationException {
+        int sequenceIdx = 0;
+        int totalResponseLength = 0;
+        ByteBuffer outBuffer = null;
+
+        while (true) {
+            int extraHeaderSize = 0;
+
+            // the first packet always contains extra information
+            if (sequenceIdx == 0) {
+                extraHeaderSize = 2;
+            }
+
+            DeserializedPacket packet = deserializePacket(channel, data, sequenceIdx, ble);
+
+            // this is always guaranteed to run on the first loop
+            if (sequenceIdx == 0) {
+                totalResponseLength = packet.totalResponseLength;
+                outBuffer = ByteBuffer.allocate(totalResponseLength);
+            }
+
+            if ((5 + extraHeaderSize + totalResponseLength) > data.length) {
+                return null;
+            }
+
+            byte[] deserializedPayload = packet.data;
+            if (outBuffer.remaining() < deserializedPayload.length) {
+                deserializedPayload = trimTail(deserializedPayload, deserializedPayload.length - outBuffer.remaining());
+            }
+            outBuffer.put(deserializedPayload);
+
+            if (!outBuffer.hasRemaining()) {
+                break;
+            }
+            sequenceIdx++;
+        }
+        return outBuffer.array();
     }
 }

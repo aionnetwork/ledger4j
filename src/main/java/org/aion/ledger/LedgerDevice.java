@@ -1,5 +1,6 @@
 package org.aion.ledger;
 
+import org.aion.ledger.exceptions.CommsException;
 import org.aion.ledger.exceptions.LedgerWriteException;
 import purejavahidapi.HidDevice;
 import purejavahidapi.InputReportListener;
@@ -9,7 +10,10 @@ import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.aion.ledger.APDUWrapper.unwrapResponseAPDU;
 import static org.aion.ledger.APDUWrapper.wrapCommandAPDU;
+import static org.aion.ledger.ByteUtilities.merge;
+import static org.aion.ledger.ByteUtilities.trimTail;
 import static org.aion.ledger.Constants.*;
 import static org.aion.ledger.LedgerUtilities.toHardenedOffset;
 
@@ -42,7 +46,9 @@ public abstract class LedgerDevice {
      */
     protected abstract byte[] read(final int waitPeriod);
 
-    public byte[] exchange(@Nonnull final byte[] input) {
+    protected abstract void setNonBlocking(boolean cond);
+
+    public byte[] exchange(@Nonnull final byte[] input) throws CommsException {
         assert input.length >= 5;
         assert (input.length - 5) == input[4];
 
@@ -66,7 +72,44 @@ public abstract class LedgerDevice {
 
         // after writing is complete, starting reading from device
         // TODO
-        return read(LEDGER_WAIT_TIMEOUT);
+        byte[] ledgerResponse = new byte[0];
+        byte[] deserialized = null;
+        while (true) {
+            byte[] respPacket = read(1000);
+            ledgerResponse = merge(ledgerResponse, respPacket);
+
+            try {
+                deserialized = unwrapResponseAPDU(CHANNEL, ledgerResponse, false);
+            } catch (APDUWrapper.DeserializationException e) {
+                // this indicates there was an unrecoverable issue with deserialization
+                // best to wrap in an LedgerException and throw
+                throw new CommsException(e);
+            }
+
+            // indicates a successful deserialization
+            if (deserialized != null) {
+                break;
+            }
+        }
+
+        // interpret results of deserialization
+        final int swOffset = deserialized.length - 2;
+        final int sw = (deserialized[swOffset] << 8 + deserialized[swOffset + 1]) & 0xFFFF;
+        switch(sw) {
+            case 0x9000:
+                return trimTail(deserialized, 2);
+            case 0x6982:
+                throw new CommsException(sw, "Have you installed the existing CA with resetCustomCA first?");
+            case 0x6985:
+                throw new CommsException(sw, "Condition of use not satisifed (denied by user?");
+            case 0x6a84:
+            case 0x6a85:
+                throw new CommsException(sw, "Not enough space?");
+            case 0x6484:
+                throw new CommsException(sw, "Are you using the correct targetId?");
+            default:
+                throw new CommsException(sw, "Unknown reason");
+        }
     }
 
     // AION specific functionality
@@ -121,10 +164,25 @@ public abstract class LedgerDevice {
         return buf.array();
     }
 
+    /**
+     * Retrieves the public key of the connected ledger AION app, given the
+     * <b>offset</b> from the HD path.
+     *
+     * @apiNote notice here that the range of the offset parameter is:
+     * 0 <= offset <= 0x0FFFFFFF
+     *
+     * There _is_ an assertion check in place to guarantee this invariant
+     * TODO: should probably be moved to a runtime exception
+     *
+     * @param offset of the given address
+     * @return the public key and address returned from the ledger AION app
+     */
     @Nullable
-    public byte[] getPublicKey(final int offset) {
+    public KeyAddress getPublicKey(final int offset) throws CommsException {
         byte[] bip32Path = generateBip32Path(offset);
         byte[] pkApdu = publicKeyAPDUCommand(bip32Path);
-        return exchange(pkApdu);
+        exchange(pkApdu);
+        // TODO
+        return null;
     }
 }

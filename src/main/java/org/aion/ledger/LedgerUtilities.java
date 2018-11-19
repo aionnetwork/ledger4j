@@ -176,7 +176,7 @@ public class LedgerUtilities {
      * @return big-endian encoded byte array of length 4
      */
     @Nonnull
-    public static byte[] toByteArray(final int i) {
+    private static byte[] toByteArray(final int i) {
         final byte[] val = new byte[4];
         val[3] = (byte) (i & 0xFF);
         val[2] = (byte) ((i >> 8) & 0xFF);
@@ -185,7 +185,8 @@ public class LedgerUtilities {
         return val;
     }
 
-    public static byte[] toHardenedOffset(final int i) {
+    @Nonnull
+    static byte[] toHardenedOffset(final int i) {
         byte[] offset = toByteArray(i);
         offset[0] = (byte) (offset[0] | (byte) 0x80);
         return offset;

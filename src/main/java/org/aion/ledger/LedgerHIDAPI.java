@@ -4,6 +4,7 @@ import org.aion.ledger.exceptions.LedgerWriteException;
 import org.hid4java.HidDevice;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import java.io.IOException;
 
@@ -47,6 +48,7 @@ public class LedgerHIDAPI extends LedgerDevice {
      * @param waitPeriod how long to wait, <= 0 for indefinite blocking
      * @return {@code 64-byte} chunk of data, returns {@code null} on any conditions failing
      */
+    @Nullable
     @Override
     protected byte[] read(final int waitPeriod) {
         byte[] data = new byte[PACKET_SIZE];
@@ -57,5 +59,10 @@ public class LedgerHIDAPI extends LedgerDevice {
             return null;
         }
         return data;
+    }
+
+    @Override
+    protected void setNonBlocking(boolean condition) {
+        this.device.setNonBlocking(condition);
     }
 }

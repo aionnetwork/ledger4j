@@ -1,5 +1,6 @@
 package org.aion.ledger;
 
+import org.aion.ledger.exceptions.CommsException;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -17,14 +18,16 @@ public class LedgerDeviceHardwareTest {
     private class LedgerNotFoundException extends RuntimeException {}
 
     @Test
-    public void testGetAionLedgerOffsetZeroKey() throws IOException {
+    public void testGetAionLedgerOffsetZeroKey() throws IOException, CommsException {
         LedgerDevice device = LedgerUtilities.findLedgerDevice();
 
         if (device == null) {
             throw new LedgerNotFoundException();
         }
 
-        byte[] publicKey = device.getPublicKey(0);
-        System.out.println(LedgerUtilities.bytesToHex(publicKey));
+        KeyAddress keyAddress = device.getPublicKey(0);
+
+        assertThat(keyAddress.getPublicKey()).isNotNull();
+        System.out.println(LedgerUtilities.bytesToHex(keyAddress.getPublicKey()));
     }
 }
