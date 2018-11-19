@@ -49,20 +49,6 @@ public class LedgerUtilities {
     }
 
     @Nullable
-    private static LedgerDevice findLedgerDevicePJHID() throws IOException {
-        List<HidDeviceInfo> infos = PureJavaHidApi.enumerateDevices();
-        // implies that are there is only one ledger attached, what if multiple (?)
-        for (HidDeviceInfo info : infos) {
-            if (isLedger(info.getVendorId(), info.getProductString())) {
-                return new LedgerPJHID(PureJavaHidApi.openDevice(info));
-            }
-        }
-
-        // nothing found
-        return null;
-    }
-
-    @Nullable
     private static LedgerDevice findLedgerDeviceHIDAPI() {
         HidServices services = HidManager.getHidServices();
         for (org.hid4java.HidDevice device : services.getAttachedHidDevices()) {
@@ -84,7 +70,7 @@ public class LedgerUtilities {
         if (LIB_NATIVE) {
             return findLedgerDeviceHIDAPI();
         } else {
-            return findLedgerDevicePJHID();
+            throw new UnsupportedOperationException();
         }
     }
 
