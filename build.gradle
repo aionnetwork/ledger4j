@@ -7,6 +7,7 @@ repositories {
 dependencies {
     compile group: 'org.hid4java', name: 'hid4java', version: '0.5.0'
     compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1'
 
     testCompile 'junit:junit:4.12'
     testCompile "com.google.truth:truth:0.42"

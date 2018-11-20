@@ -1,5 +1,6 @@
 package org.aion.ledger;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.hid4java.HidManager;
 import org.hid4java.HidServices;
 
@@ -8,6 +9,7 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 
 import static org.aion.ledger.Constants.LIB_NATIVE;
+import static org.aion.ledger.Constants.USAGE_PAGE_LEDGER;
 
 public class LedgerUtilities {
 
@@ -23,7 +25,7 @@ public class LedgerUtilities {
     private static LedgerDevice findLedgerDeviceHIDAPI() {
         HidServices services = HidManager.getHidServices();
         for (org.hid4java.HidDevice device : services.getAttachedHidDevices()) {
-            if (isLedger(device.getVendorId(), device.getProduct())) {
+            if (isLedger(device.getVendorId(), device.getProduct(), device.getUsagePage())) {
 
                 if (!device.isOpen()) {
                     device.open();
@@ -45,7 +47,9 @@ public class LedgerUtilities {
         }
     }
 
-    private static boolean isLedger(final int vendorId, @Nonnull final String productString) {
+    private static boolean isLedger(final int vendorId,
+                                    @Nonnull final String productString,
+                                    final int usagePage) {
         // TODO: this area needs work, original implement not picking up Nano S
         // TODO: the second condition specified below (for fallback on Mac OS and Windows currently not included)
         // see: https://github.com/LedgerHQ/ledgerjs/blob/master/packages/hw-transport-node-hid/src/getDevices.js
@@ -59,6 +63,13 @@ public class LedgerUtilities {
         // might not be consistent on all platforms
         if (!productString.equals(Constants.PRODUCT_LEDGER))
             return false;
+
+        if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_MAC) {
+            if (usagePage != USAGE_PAGE_LEDGER) {
+                return false;
+            }
+        }
+
         return true;
     }
 
