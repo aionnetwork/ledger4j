@@ -1,5 +1,8 @@
 apply plugin: 'java'
 
+// version
+version = '0.0.1'
+
 repositories {
     mavenCentral()
 }
@@ -21,4 +24,12 @@ jar {
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }
+
+    from {
+        "LICENSE"
+    }
+}
+
+test {
+    exclude '**/*Hardware*'
 }
