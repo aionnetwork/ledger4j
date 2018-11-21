@@ -7,9 +7,14 @@ repositories {
     mavenCentral()
 }
 
+configurations {
+    provided
+    compile.extendsFrom provided
+}
+
 dependencies {
     compile group: 'org.hid4java', name: 'hid4java', version: '0.5.0'
-    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+    provided group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.8.1'
 
     testCompile 'junit:junit:4.12'
@@ -21,8 +26,16 @@ jar {
         attributes "Main-Class": "org.aion.ledger.App"
     }
 
+    dependsOn configurations.runtime
     from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+        (configurations.runtime - configurations.provided).collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    } 
+     {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
     }
 
     from {
