@@ -8,6 +8,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 
+import static org.aion.ledger.Constants.INTERFACE_NUMBER;
 import static org.aion.ledger.Constants.LIB_NATIVE;
 import static org.aion.ledger.Constants.USAGE_PAGE_LEDGER;
 
@@ -25,7 +26,8 @@ public class LedgerUtilities {
     private static LedgerDevice findLedgerDeviceHIDAPI() {
         HidServices services = HidManager.getHidServices();
         for (org.hid4java.HidDevice device : services.getAttachedHidDevices()) {
-            if (isLedger(device.getVendorId(), device.getProduct(), device.getUsagePage())) {
+            if (isLedger(device.getVendorId(), device.getProduct(),
+                    device.getUsagePage(), device.getInterfaceNumber())) {
 
                 if (!device.isOpen()) {
                     device.open();
@@ -49,7 +51,8 @@ public class LedgerUtilities {
 
     private static boolean isLedger(final int vendorId,
                                     @Nonnull final String productString,
-                                    final int usagePage) {
+                                    final int usagePage,
+                                    final int interfaceNumber) {
         // TODO: this area needs work, original implement not picking up Nano S
         // TODO: the second condition specified below (for fallback on Mac OS and Windows currently not included)
         // see: https://github.com/LedgerHQ/ledgerjs/blob/master/packages/hw-transport-node-hid/src/getDevices.js
@@ -57,15 +60,12 @@ public class LedgerUtilities {
         if (vendorId != Constants.VENDOR_LEDGER)
             return false;
 
-        // related discussion
-        // https://github.com/signal11/hidapi/issues/385
-        // TODO: this is a heuristic derived from me looking at outputs
-        // might not be consistent on all platforms
-        if (!productString.equals(Constants.PRODUCT_LEDGER))
-            return false;
-
         if (SystemUtils.IS_OS_WINDOWS || SystemUtils.IS_OS_MAC) {
             if (usagePage != USAGE_PAGE_LEDGER) {
+                return false;
+            }
+        } else {
+            if (interfaceNumber != INTERFACE_NUMBER) {
                 return false;
             }
         }

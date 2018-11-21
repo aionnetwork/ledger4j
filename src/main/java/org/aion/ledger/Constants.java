@@ -9,6 +9,8 @@ public class Constants {
     public static int           USAGE_PAGE_LEDGER = 0xffffffa0;
     public static int           CHANNEL = 0x0101;
 
+    public static int           INTERFACE_NUMBER = 0;
+
     // TODO: verify this stat is consistent on Windows and Mac
     public static String        PRODUCT_LEDGER = "Nano S";
 
