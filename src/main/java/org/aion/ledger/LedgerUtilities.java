@@ -3,6 +3,8 @@ package org.aion.ledger;
 import org.apache.commons.lang3.SystemUtils;
 import org.hid4java.HidManager;
 import org.hid4java.HidServices;
+import org.hid4java.HidServicesSpecification;
+import org.hid4java.ScanMode;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -24,7 +26,9 @@ public class LedgerUtilities {
 
     @Nullable
     private static LedgerDevice findLedgerDeviceHIDAPI() {
-        HidServices services = HidManager.getHidServices();
+        HidServicesSpecification specs = new HidServicesSpecification();
+        HidServices services = HidManager.getHidServices(specs);
+
         for (org.hid4java.HidDevice device : services.getAttachedHidDevices()) {
             if (isLedger(device.getVendorId(), device.getProduct(),
                     device.getUsagePage(), device.getInterfaceNumber())) {
