@@ -5,6 +5,7 @@ import org.aion.ledger.LedgerDevice;
 import org.aion.ledger.LedgerUtilities;
 import org.aion.ledger.application.AionApp;
 import org.aion.ledger.exceptions.CommsException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -47,8 +48,6 @@ public class LedgerDeviceHardwareTest {
                 device.close();
             }
         }
-        // as a courtesy wait for hardware device to sleep
-        Thread.sleep(100L);
     }
 
     @Test
@@ -69,9 +68,9 @@ public class LedgerDeviceHardwareTest {
                 device.close();
             }
         }
-        Thread.sleep(100L);
     }
 
+    @Ignore
     @Test
     public void testAionSignTransaction() throws IOException, InterruptedException, CommsException {
         // this was generated using the script in aion_ledger python tests
