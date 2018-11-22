@@ -12,8 +12,6 @@ gradle-app.setting
 
 .idea/**
 
-deps/**
+out/**
 
 *.log
-
-out/**

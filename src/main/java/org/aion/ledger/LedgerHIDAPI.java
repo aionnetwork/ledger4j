@@ -2,15 +2,19 @@ package org.aion.ledger;
 
 import org.aion.ledger.exceptions.LedgerWriteException;
 import org.hid4java.HidDevice;
+import org.hid4java.HidManager;
+import org.hid4java.HidServices;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import java.io.IOException;
 
 import static org.aion.ledger.Constants.PACKET_SIZE;
 
 public class LedgerHIDAPI extends LedgerDevice {
 
-    private final HidDevice device;
+    private HidDevice device;
 
     public LedgerHIDAPI(@Nonnull final HidDevice device) {
         this.device = device;
@@ -60,7 +64,25 @@ public class LedgerHIDAPI extends LedgerDevice {
     }
 
     @Override
+    protected void resetLedger() {
+        this.device.close();
+        HidServices services = HidManager.getHidServices();
+        services.scan();
+        try {
+            // TODO: violates abstraction
+            this.device = ((LedgerHIDAPI) LedgerUtilities.findLedgerDevice()).device;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     protected void setNonBlocking(boolean condition) {
         this.device.setNonBlocking(condition);
+    }
+
+    @Override
+    public String toString() {
+        return this.device.toString();
     }
 }
