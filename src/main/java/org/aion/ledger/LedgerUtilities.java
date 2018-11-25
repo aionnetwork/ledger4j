@@ -5,6 +5,7 @@ import org.hid4java.HidManager;
 import org.hid4java.HidServices;
 import org.hid4java.HidServicesSpecification;
 import org.hid4java.ScanMode;
+import org.hid4java.jna.HidApi;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -15,6 +16,11 @@ import static org.aion.ledger.Constants.LIB_NATIVE;
 import static org.aion.ledger.Constants.USAGE_PAGE_LEDGER;
 
 public class LedgerUtilities {
+
+    static {
+        // https://github.com/gary-rowe/hid4java/pull/43
+        HidApi.dropReportIdZero = false;
+    }
 
     @Nonnull
     private static void entry(StringBuilder builder, String entry, String value) {
